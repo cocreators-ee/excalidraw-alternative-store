@@ -1,0 +1,32 @@
+version: '3'
+services:
+  excalidraw-alternative-store:
+    image: ghcr.io/cocreators-ee/excalidraw-alternative-store
+    restart: unless-stopped
+    ports:
+      - '4400:8080'
+    environment:
+      PORT: 8080
+      ALLOWED_CORS_ORIGINS: http://your.domain
+    volumes:
+      - ./storage:/src/storage
+
+  excalidraw-room:
+    image: excalidraw/excalidraw-room
+    restart: unless-stopped
+    ports:
+      - '4401:4401'
+    environment:
+      PORT: 4401
+      CORS_ORIGIN: http://your.domain
+
+  excalidraw:
+    build:
+      context: excalidraw
+      args:
+        - VITE_APP_BACKEND_V2_GET_URL=https://your.storage.domain/api/v2/
+        - VITE_APP_BACKEND_V2_POST_URL=https://your.storage.domain/api/v2/post/
+        - VITE_APP_WS_SERVER_URL=https://your.room.domain
+    ports:
+      - '4402:4402'
+    restart: unless-stopped

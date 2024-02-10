@@ -1,0 +1,44 @@
+name: Build and upload images
+
+on:
+  schedule:
+    # First day of every month, you know, for automatic updates etc.
+    - cron: '0 0 1 * *'
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  build_and_upload:
+    name: Build and upload
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Build
+        run: |
+          docker build . -t ghcr.io/cocreators-ee/excalidraw-alternative-store:latest
+
+      - name: Publish
+        run: |
+          docker push ghcr.io/cocreators-ee/excalidraw-alternative-store:latest
+
+          TAG=$(git tag --points-at HEAD | head -n1)
+          if [[ "$TAG" != "" ]]; then
+            docker tag ghcr.io/cocreators-ee/excalidraw-alternative-store:latest ghcr.io/cocreators-ee/excalidraw-alternative-store:${TAG}
+            docker push ghcr.io/cocreators-ee/excalidraw-alternative-store:${TAG}
+          fi
+        if: success()

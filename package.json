@@ -1,42 +1,35 @@
 {
-  "name": "excalidraw-store",
+  "name": "excalidraw-alternative-store",
   "version": "1.0.0",
-  "repository": "git@github.com:excalidraw/excalidraw-store.git",
-  "author": "Panayiotis Lipiridis <lipiridis@gmail.com>",
+  "repository": "git@github.com:cocreators-ee/excalidraw-alternative-store.git",
+  "author": "Janne Enberg <janne.enberg@lietu.net>",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "devDependencies": {
-    "@types/cors": "2.8.12",
-    "@types/express": "4.17.13",
-    "@types/serve-favicon": "2.5.3",
-    "esbuild": "0.14.9",
-    "husky": "^7.0.4",
-    "lint-staged": "^12.1.2",
-    "prettier": "2.5.1",
-    "ts-node-dev": "1.1.8",
-    "typescript": "4.5.4"
+    "@types/cors": "^2.8.5",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.16",
+    "esbuild": "^0.20.0",
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@google-cloud/storage": "5.16.1",
-    "cors": "2.8.5",
-    "express": "4.17.2",
-    "nanoid": "3.1.30",
-    "serve-favicon": "2.5.0"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.17.3",
+    "nanoid": "^5.0.5"
   },
-  "lint-staged": {
-    "*.{ts,js,json,md,html,yml}": [
-      "prettier --write"
-    ]
+  "prettier": {
+    "trailingComma": "all",
+    "singleQuote": true,
+    "semi": false
   },
   "scripts": {
-    "build": "node esbuild.js",
-    "deploy": "yarn build && gcloud app deploy --project excalidraw-json -q",
-    "deploy:dev": "yarn build && gcloud app deploy --project excalidraw-json-dev -q",
-    "dev": "ts-node-dev index.ts",
-    "fix": "yarn prettier --write",
-    "prepare": "husky install",
-    "prettier": "prettier \"**/*.{ts,js,json,md,html,yml}\" --ignore-path=.gitignore",
-    "start": "node index.js",
-    "test": "yarn prettier --list-different"
+    "build": "esbuild src/index.ts --bundle --platform=node --packages=external --outfile=build/index.js --format=esm",
+    "dev": "pnpm install && nodemon --exec node --loader ts-node/esm --experimental-specifier-resolution=node src/index.ts",
+    "start": "node build/index.js",
+    "test": "pnpm prettier --list-different"
   }
 }

@@ -1,0 +1,26 @@
+name: pre-commit
+
+on: pull_request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.12 🐍
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install pre-commit 💈
+        run: pip install pre-commit
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.x
+
+      - name: Run pre-commit 🤔
+        run: pre-commit run --all-files

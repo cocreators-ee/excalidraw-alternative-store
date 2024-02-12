@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.1",
+    "dotenv": "^16.4.2",
     "express": "^4.17.3",
     "nanoid": "^5.0.5"
   },

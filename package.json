@@ -10,7 +10,7 @@
     "@types/cors": "^2.8.5",
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.16",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.20.1",
     "nodemon": "^3.0.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

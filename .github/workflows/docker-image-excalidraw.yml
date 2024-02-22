@@ -1,4 +1,4 @@
-name: Build and upload images
+name: Build and upload excalidraw docker image
 
 on:
   schedule:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   build_and_upload:
-    name: Build and upload
+    name: Build and upload excalidraw docker image
     runs-on: ubuntu-latest
 
     permissions:

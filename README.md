@@ -1,6 +1,7 @@
 # Excalidraw Alternative Store
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/cocreators-ee/excalidraw-alternative-store/docker-image.yaml)](https://github.com/cocreators-ee/excalidraw-alternative-store/actions/workflows/docker-image.yaml)
+[![GitHub excalidraw-alternative-store image build](https://img.shields.io/github/actions/workflow/status/cocreators-ee/excalidraw-alternative-store/docker-image-excalidraw-alternative-store.yml)](https://github.com/cocreators-ee/excalidraw-alternative-store/actions/workflows/docker-image-excalidraw-alternative-store.yml)
+[![GitHub excalidraw image build](https://img.shields.io/github/actions/workflow/status/cocreators-ee/excalidraw-alternative-store/docker-image-excalidraw.yml)](https://github.com/cocreators-ee/excalidraw-alternative-store/actions/workflows/docker-image-excalidraw.yml)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/cocreators-ee/excalidraw-alternative-store/blob/master/.pre-commit-config.yaml)
 
 Provides alternative storage options for Excalidraw instead of [excalidraw-store](https://github.com/excalidraw/excalidraw-store).

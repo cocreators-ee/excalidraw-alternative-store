@@ -7,7 +7,7 @@ services:
       - '4400:8080'
     environment:
       PORT: 8080
-      ALLOWED_CORS_ORIGINS: http://your.domain
+      ALLOWED_CORS_ORIGINS: https://your.excalidraw.domain
     volumes:
       - ./storage:/src/storage
 
@@ -18,15 +18,14 @@ services:
       - '4401:4401'
     environment:
       PORT: 4401
-      CORS_ORIGIN: http://your.domain
+      CORS_ORIGIN: https://your.excalidraw.domain
 
   excalidraw:
-    build:
-      context: excalidraw
-      args:
-        - VITE_APP_BACKEND_V2_GET_URL=https://your.storage.domain/api/v2/
-        - VITE_APP_BACKEND_V2_POST_URL=https://your.storage.domain/api/v2/post/
-        - VITE_APP_WS_SERVER_URL=https://your.room.domain
+    image: ghcr.io/cocreators-ee/excalidraw
+    restart: unless-stopped
     ports:
       - '4402:4402'
-    restart: unless-stopped
+    environment:
+      VITE_APP_BACKEND_V2_GET_URL: https://your.excalidraw-store.domain/api/v2/
+      VITE_APP_BACKEND_V2_POST_URL: https://your.excalidraw-store.domain/api/v2/post/
+      VITE_APP_WS_SERVER_URL: https://your.excalidraw-room.domain

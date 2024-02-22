@@ -1,0 +1,43 @@
+name: Build and upload images
+
+on:
+  schedule:
+    # First day of every month, you know, for automatic updates etc.
+    - cron: '0 0 1 * *'
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  build_and_upload:
+    name: Build and upload
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        run: |
+          cd excalidraw
+          docker build . -t ghcr.io/cocreators-ee/excalidraw:latest
+
+      - name: Publish
+        run: |
+          docker push ghcr.io/cocreators-ee/excalidraw:latest
+        if: success()

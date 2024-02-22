@@ -56,7 +56,7 @@ export class LocalFileStorage implements IStorage {
       const proto = OVERRIDE_PROTOCOL ? OVERRIDE_PROTOCOL : req.protocol
 
       res.status(200).json({
-        key,
+        id: key,
         data: `${proto}://${req.get('host')}/api/v2/${key}`,
       })
     })

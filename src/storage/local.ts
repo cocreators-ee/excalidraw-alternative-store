@@ -11,6 +11,7 @@ import {
   FILE_SIZE_LIMIT,
   FILESYSTEM_ROOT,
   LOCAL_STORAGE_PATH,
+  OVERRIDE_PROTOCOL,
 } from '../settings'
 import * as fs from 'fs'
 import path from 'path'
@@ -52,9 +53,11 @@ export class LocalFileStorage implements IStorage {
         return
       }
 
+      const proto = OVERRIDE_PROTOCOL ? OVERRIDE_PROTOCOL : req.protocol
+
       res.status(200).json({
         key,
-        data: `${req.protocol}://${req.get('host')}/api/v2/${key}`,
+        data: `${proto}://${req.get('host')}/api/v2/${key}`,
       })
     })
 

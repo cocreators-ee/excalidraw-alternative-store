@@ -10,4 +10,5 @@ export const FILE_SIZE_LIMIT = Number(
 export const STORAGE_MODULE = process.env.STORAGE_MODULE || 'local'
 export const CORS_ALLOW_ORIGINS: string = process.env.CORS_ALLOW_ORIGINS || ''
 export const LOCAL_STORAGE_PATH = process.env.LOCAL_STORAGE_PATH || './storage'
+export const OVERRIDE_PROTOCOL = process.env.OVERRIDE_PROTOCOL
 export const FILESYSTEM_ROOT = process.cwd()

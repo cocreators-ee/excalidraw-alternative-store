@@ -7,6 +7,7 @@ services:
       - '4400:8080'
     environment:
       PORT: 8080
+      OVERRIDE_PROTOCOL: https
       ALLOWED_CORS_ORIGINS: https://your.excalidraw.domain
     volumes:
       - ./storage:/src/storage
@@ -24,7 +25,7 @@ services:
     image: ghcr.io/cocreators-ee/excalidraw
     restart: unless-stopped
     ports:
-      - '4402:4402'
+      - '4402:80'
     environment:
       VITE_APP_BACKEND_V2_GET_URL: https://your.excalidraw-store.domain/api/v2/
       VITE_APP_BACKEND_V2_POST_URL: https://your.excalidraw-store.domain/api/v2/post/

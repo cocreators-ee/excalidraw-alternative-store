@@ -41,12 +41,7 @@ const corsPost = cors((req, callback) => {
   const origin = req.headers.origin
   let isGood = false
   if (origin) {
-    for (const allowOrigin of allowOrigins) {
-      if (origin.indexOf(allowOrigin) >= 0) {
-        isGood = true
-        break
-      }
-    }
+    isGood = allowOrigins.includes(origin)
   }
   callback(null, { origin: isGood })
 })

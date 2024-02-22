@@ -8,7 +8,7 @@ services:
     environment:
       PORT: 8080
       OVERRIDE_PROTOCOL: https
-      ALLOWED_CORS_ORIGINS: https://your.excalidraw.domain
+      CORS_ALLOW_ORIGINS: https://your.excalidraw.domain
     volumes:
       - ./storage:/src/storage
 

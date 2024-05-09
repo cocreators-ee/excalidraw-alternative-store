@@ -20,8 +20,8 @@ dependencies:
 
 devDependencies:
   '@types/cors':
-    specifier: ^2.8.5
-    version: 2.8.12
+    specifier: ^2.8.17
+    version: 2.8.17
   '@types/express':
     specifier: ^4.17.21
     version: 4.17.21
@@ -302,8 +302,10 @@ packages:
       '@types/node': 20.11.16
     dev: true
 
-  /@types/cors@2.8.12:
-    resolution: {integrity: sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==}
+  /@types/cors@2.8.17:
+    resolution: {integrity: sha512-8CGDvrBj1zgo2qE+oS3pOCyYNqCPryMWY2bGfwA0dcfopWGgxs+78df0Rs3rc9THP4JkOhLsAa+15VdpAqkcUA==}
+    dependencies:
+      '@types/node': 20.11.16
     dev: true
 
   /@types/express-serve-static-core@4.17.43:

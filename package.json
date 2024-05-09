@@ -19,7 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.17.3",
-    "nanoid": "^5.0.5"
+    "nanoid": "^5.0.7"
   },
   "prettier": {
     "trailingComma": "all",

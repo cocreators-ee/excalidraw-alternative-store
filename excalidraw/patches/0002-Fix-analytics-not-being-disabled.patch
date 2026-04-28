@@ -1,0 +1,101 @@
+From 5745d1393de803eafe7dfe2f42bb00a2bdbb71ca Mon Sep 17 00:00:00 2001
+From: MadddinTribleD <excalidraw-patch@martin.gafert.org>
+Date: Sat, 28 Dec 2024 16:00:49 +0100
+Subject: [PATCH 2/2] Fix analytics not being disabled
+
+---
+ index.html        | 59 +++++++++++++++++++++++++----------------------
+ src/vite-env.d.ts |  2 ++
+ 2 files changed, 33 insertions(+), 28 deletions(-)
+
+diff --git a/index.html b/index.html
+index b1e0f2ab..cad7fbc0 100644
+--- a/index.html
++++ b/index.html
+@@ -196,39 +196,42 @@
+     </header>
+     <div id="root"></div>
+     <script type="module" src="/src/index.tsx"></script>
+-    <% if ("%VITE_APP_DEV_DISABLE_LIVE_RELOAD%" !== 'true') { %>
++
++    <div style="display: none;" id="disable_tracking">%VITE_APP_DISABLE_TRACKING%</div>
+     <!-- 100% privacy friendly analytics -->
+     <script>
+-      // need to load this script dynamically bcs. of iframe embed tracking
+-      var scriptEle = document.createElement("script");
+-      scriptEle.setAttribute(
+-        "src",
+-        "https://scripts.simpleanalyticscdn.com/latest.js",
+-      );
+-      scriptEle.setAttribute("type", "text/javascript");
+-      scriptEle.setAttribute("defer", true);
+-      scriptEle.setAttribute("async", true);
+-      // if iframe
+-      if (window.self !== window.top) {
+-        scriptEle.setAttribute("data-auto-collect", true);
+-      }
++      const disable_tracking = document.getElementById("disable_tracking");
++      if (disable_tracking && disable_tracking.textContent !== "true") {        
++        // need to load this script dynamically bcs. of iframe embed tracking
++        var scriptEle = document.createElement("script");
++        scriptEle.setAttribute(
++          "src",
++          "https://scripts.simpleanalyticscdn.com/latest.js",
++        );
++        scriptEle.setAttribute("type", "text/javascript");
++        scriptEle.setAttribute("defer", true);
++        scriptEle.setAttribute("async", true);
++        // if iframe
++        if (window.self !== window.top) {
++          scriptEle.setAttribute("data-auto-collect", true);
++        }
+ 
+-      document.body.appendChild(scriptEle);
+-
+-      // if iframe
+-      if (window.self !== window.top) {
+-        scriptEle.addEventListener("load", () => {
+-          if (window.sa_pageview) {
+-            window.window.sa_event(action, {
+-              category: "iframe",
+-              label: "embed",
+-              value: window.location.pathname,
+-            });
+-          }
+-        });
++        document.body.appendChild(scriptEle);
++
++        // if iframe
++        if (window.self !== window.top) {
++          scriptEle.addEventListener("load", () => {
++            if (window.sa_pageview) {
++              window.window.sa_event(action, {
++                category: "iframe",
++                label: "embed",
++                value: window.location.pathname,
++              });
++            }
++          });
++        }
+       }
+     </script>
+     <!-- end LEGACY GOOGLE ANALYTICS -->
+-    <% } %>
+   </body>
+ </html>
+diff --git a/src/vite-env.d.ts b/src/vite-env.d.ts
+index cd4030b1..b0ac6763 100644
+--- a/src/vite-env.d.ts
++++ b/src/vite-env.d.ts
+@@ -54,6 +54,8 @@ interface ImportMetaEnv {
+   MODE: string;
+   DEV: string;
+   PROD: string;
++
++  VITE_APP_DISABLE_TRACKING: string;
+ }
+ 
+ interface ImportMeta {
+-- 
+2.47.1
+

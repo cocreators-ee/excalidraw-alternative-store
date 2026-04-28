@@ -36,18 +36,15 @@ if (CORS_ALLOW_ORIGINS) {
   allowOrigins = CORS_ALLOW_ORIGINS.split(',')
 }
 
-const corsGet = cors()
-const corsPost = cors((req, callback) => {
-  const origin = req.headers.origin
-  let isGood = false
-  if (origin) {
-    isGood = allowOrigins.includes(origin)
-  }
-  callback(null, { origin: isGood })
-})
+var corsOptions = {
+  origin: allowOrigins
+}
 
 const app: Express = express()
-app.get('/api/v2/:key', corsGet, async (req: Request, res: Response) => {
+
+app.use(cors(corsOptions));
+
+app.get('/api/v2/:key', async (req: Request, res: Response) => {
   try {
     const key = <string>req.params.key
     await storage.get(key, res)
@@ -59,7 +56,7 @@ app.get('/api/v2/:key', corsGet, async (req: Request, res: Response) => {
   }
 })
 
-app.post('/api/v2/post/', corsPost, async (req: Request, res: Response) => {
+app.post('/api/v2/post/', async (req: Request, res: Response) => {
   try {
     const key = nanoid()
     await storage.set(key, req, res)
@@ -68,5 +65,15 @@ app.post('/api/v2/post/', corsPost, async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Could not upload the data.' })
   }
 })
+
+app.post('/api/v2/post/:key', async (req: Request, res: Response) => {
+  try {
+    const key = <string>req.params.key
+    await storage.set(key, req, res)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Could not upload the data.' })
+  }
+});
 
 app.listen(PORT, () => console.log(`Listening to http://0.0.0.0:${PORT}`))

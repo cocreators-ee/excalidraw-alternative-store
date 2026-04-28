@@ -1,0 +1,292 @@
+From a15d515d77d67d6ed9358eea240c2026ee1408da Mon Sep 17 00:00:00 2001
+From: MadddinTribleD <excalidraw-patch@martin.gafert.org>
+Date: Sat, 28 Dec 2024 15:12:29 +0100
+Subject: [PATCH 1/2] Add alternative backend
+
+---
+ excalidraw-app/data/firebase.ts | 234 ++++++++++++++++++++++++++++++++
+ 1 file changed, 234 insertions(+)
+
+diff --git a/excalidraw-app/data/firebase.ts b/excalidraw-app/data/firebase.ts
+index 831213d6..a817ee87 100644
+--- a/excalidraw-app/data/firebase.ts
++++ b/excalidraw-app/data/firebase.ts
+@@ -15,6 +15,7 @@ import { MIME_TYPES } from "../../src/constants";
+ import { reconcileElements } from "../collab/reconciliation";
+ import { getSyncableElements, SyncableExcalidrawElement } from ".";
+ import { ResolutionType } from "../../src/utility-types";
++import { s } from "vitest/dist/types-3c7dbfa5";
+ 
+ // private
+ // -----------------------------------------------------------------------------
+@@ -158,6 +159,46 @@ export const isSavedToFirebase = (
+   return true;
+ };
+ 
++export const saveFilesToAlternativeBackend = async ({
++  prefix,
++  files,
++}: {
++  prefix: string;
++  files: { id: FileId; buffer: Uint8Array }[];
++}) => {
++  const BACKEND_V2_POST = import.meta.env.VITE_APP_BACKEND_V2_POST_URL;
++
++  if (!BACKEND_V2_POST) {
++    throw new Error("No alternative backend URL provided");
++  }
++
++  const erroredFiles = new Map<FileId, true>();
++  const savedFiles = new Map<FileId, true>();
++
++  await Promise.all(
++    files.map(async ({ id, buffer }) => {
++      try {
++        const response = await fetch(`${BACKEND_V2_POST}${id}`, {
++          method: "POST",
++          headers: {
++            "Content-Type": "application/octet-stream",
++          },
++          body: buffer,
++        });
++        if (!response.ok) {
++          erroredFiles.set(id, true);
++        } else {
++          savedFiles.set(id, true);
++        }
++      } catch (error: any) {
++        erroredFiles.set(id, true);
++      }
++    }),
++  );
++
++  return { savedFiles, erroredFiles };
++}
++
+ export const saveFilesToFirebase = async ({
+   prefix,
+   files,
+@@ -165,6 +206,10 @@ export const saveFilesToFirebase = async ({
+   prefix: string;
+   files: { id: FileId; buffer: Uint8Array }[];
+ }) => {
++  if (import.meta.env.VITE_APP_BACKEND_V2_POST_URL) {
++    return saveFilesToAlternativeBackend({ prefix, files });
++  }
++
+   const firebase = await loadFirebaseStorage();
+ 
+   const erroredFiles = new Map<FileId, true>();
+@@ -210,11 +255,136 @@ const createFirebaseSceneDocument = async (
+   } as FirebaseStoredScene;
+ };
+ 
++export const loadFromAlternativeBackend = async (
++  id: string,
++  roomKey: string,
++): Promise<readonly SyncableExcalidrawElement[] | null> => {
++  const BACKEND_V2_GET = import.meta.env.VITE_APP_BACKEND_V2_GET_URL;
++
++  if (!BACKEND_V2_GET) {
++    throw new Error("No alternative backend URL provided");
++  }
++
++  const response = await fetch(`${BACKEND_V2_GET}${id}`, {
++    method: "GET",
++    headers: {
++      "Content-Type": "application/json",
++    },
++  });
++
++  if (!response.ok) {
++    return null;
++  }
++
++  const res = await response.json();
++
++  const ciphertextBase64 = res.ciphertext;
++  const ivBase64 = res.iv;
++
++  const ciphertext = atob(ciphertextBase64);
++
++  const storedScene = {
++    sceneVersion: res.sceneVersion,
++    iv: {
++      // @ts-ignore
++      toUint8Array: () => Uint8Array.fromBase64(res.iv),
++    },
++    ciphertext: {
++      // @ts-ignore
++      toUint8Array: () => Uint8Array.fromBase64(res.ciphertext),
++    },
++  } as FirebaseStoredScene;
++
++  const elements = getSyncableElements(
++    restoreElements(await decryptElements(storedScene, roomKey), null),
++  );
++
++  
++  return elements;
++}
++
++export const saveToAlternativeBackend = async (
++  portal: Portal,
++  elements: readonly SyncableExcalidrawElement[],
++  appState: AppState,
++) => {
++  const BACKEND_V2_POST = import.meta.env.VITE_APP_BACKEND_V2_POST_URL;
++
++  if (!BACKEND_V2_POST) {
++    throw new Error("No alternative backend URL provided");
++  }
++
++  if (
++    // bail if no room exists as there's nothing we can do at this point
++    !portal.roomId ||
++    !portal.roomKey ||
++    !portal.socket
++  ) {
++    return null;
++  }
++
++  const { roomId, roomKey, socket } = portal;
++
++  // const storedScene = await createFirebaseSceneDocument(
++  //   firebase,
++  //   elements,
++  //   roomKey,
++  // );
++
++
++  const { ciphertext, iv } = await encryptElements(roomKey, elements);
++  const storedScene = {
++    sceneVersion: getSceneVersion(elements),
++    iv: {
++      toUint8Array: () => new Uint8Array(iv),
++    },
++    ciphertext: {
++      toUint8Array: () => new Uint8Array(ciphertext),
++    } 
++  } as FirebaseStoredScene;
++
++  const response = await fetch(`${BACKEND_V2_POST}${roomId}`, {
++    method: "POST",
++    headers: {
++      "Content-Type": "application/json",
++    },
++    body: JSON.stringify({
++      sceneVersion: storedScene.sceneVersion,
++      // @ts-ignore
++      iv: iv.toBase64(),
++      // @ts-ignore
++      ciphertext: new Uint8Array(ciphertext).toBase64() ,
++    }),
++  });
++
++  if (!response.ok) {
++    return null;
++  }
++
++  const storedElements = getSyncableElements(
++    restoreElements(await decryptElements(storedScene, roomKey), null),
++  );
++}
++
+ export const saveToFirebase = async (
+   portal: Portal,
+   elements: readonly SyncableExcalidrawElement[],
+   appState: AppState,
+ ) => {
++  if (import.meta.env.VITE_APP_BACKEND_V2_POST_URL) {
++    return saveToAlternativeBackend(portal, elements, appState);
++  }
++  
+   const { roomId, roomKey, socket } = portal;
+   if (
+     // bail if no room exists as there's nothing we can do at this point
+@@ -281,6 +451,10 @@ export const loadFromFirebase = async (
+   roomKey: string,
+   socket: SocketIOClient.Socket | null,
+ ): Promise<readonly ExcalidrawElement[] | null> => {
++  if (import.meta.env.VITE_APP_BACKEND_V2_GET_URL) {
++    return loadFromAlternativeBackend(roomId, roomKey);
++  }
++
+   const firebase = await loadFirestore();
+   const db = firebase.firestore();
+ 
+@@ -301,11 +475,71 @@ export const loadFromFirebase = async (
+   return restoreElements(elements, null);
+ };
+ 
++export const loadFilesFromAlternativeBackend = async (
++  prefix: string,
++  decryptionKey: string,
++  filesIds: readonly FileId[],
++) => {
++  const BACKEND_V2_GET = import.meta.env.VITE_APP_BACKEND_V2_GET_URL;
++
++  if (!BACKEND_V2_GET) {
++    throw new Error("No alternative backend URL provided");
++  }
++
++  const loadedFiles: BinaryFileData[] = [];
++  const erroredFiles = new Map<FileId, true>();
++
++  await Promise.all(
++    [...new Set(filesIds)].map(async (id) => {
++      try {
++        const response = await fetch(`${BACKEND_V2_GET}${id}`, {
++          method: "GET",
++          headers: {
++            "Content-Type": "application/json",
++          },
++        });
++
++        if (response.ok) {
++          const arrayBuffer = await response.arrayBuffer();
++
++          const { data, metadata } = await decompressData<BinaryFileMetadata>(
++            new Uint8Array(arrayBuffer),
++            {
++              decryptionKey,
++            },
++          );
++
++          const dataURL = new TextDecoder().decode(data) as DataURL;
++
++          loadedFiles.push({
++            mimeType: metadata.mimeType || MIME_TYPES.binary,
++            id,
++            dataURL,
++            created: metadata?.created || Date.now(),
++            lastRetrieved: metadata?.created || Date.now(),
++          });
++        } else {
++          erroredFiles.set(id, true);
++        }
++      } catch (error: any) {
++        erroredFiles.set(id, true);
++        console.error(error);
++      }
++    }),
++  );
++
++  return { loadedFiles, erroredFiles };
++}
++
+ export const loadFilesFromFirebase = async (
+   prefix: string,
+   decryptionKey: string,
+   filesIds: readonly FileId[],
+ ) => {
++  if (import.meta.env.VITE_APP_BACKEND_V2_GET_URL) {
++    return loadFilesFromAlternativeBackend(prefix, decryptionKey, filesIds);
++  }
++
+   const loadedFiles: BinaryFileData[] = [];
+   const erroredFiles = new Map<FileId, true>();
+ 
+-- 
+2.47.1
+
